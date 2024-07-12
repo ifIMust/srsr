@@ -2,11 +2,13 @@ package registry
 
 import (
 	"errors"
+	"github.com/google/uuid"
 	"math/rand"
 	"sync"
-	
-	"github.com/google/uuid"
+	"time"
 )
+
+const expiryDuration = 30 * time.Second
 
 type Registry interface {
 	Register(name string, address string) (string, error)
@@ -15,9 +17,10 @@ type Registry interface {
 }
 
 type service_entry struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	Address string `json:"address"`
+	ID      string
+	Name    string
+	Address string
+	Cancel  chan int
 }
 
 type service_registry struct {
@@ -39,7 +42,8 @@ func (s *service_registry) Register(name string, address string) (string, error)
 	id := uuid.NewString()
 	entry := service_entry{ID: id,
 		Name:    name,
-		Address: address}
+		Address: address,
+		Cancel:  make(chan int)}
 
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -50,6 +54,16 @@ func (s *service_registry) Register(name string, address string) (string, error)
 		s.nameStore[name] = make([]*service_entry, 0, 1)
 	}
 	s.nameStore[name] = append(s.nameStore[name], &entry)
+
+	go func() {
+		select {
+		case <-time.After(expiryDuration):
+			s.Deregister(id)
+		case <-entry.Cancel:
+			// Just let the goroutine end
+		}
+	}()
+
 	return id, nil
 }
 

@@ -75,9 +75,9 @@ var _ = Describe("Registry", func() {
 			It("should not return an error", func() {
 				Expect(err).To(BeNil())
 			})
-			
+
 			Context("after Deregister", func() {
-				When("calling Lookup on deregistered ID", func () {
+				When("calling Lookup on deregistered ID", func() {
 					It("should return an empty address", func() {
 						Expect(reg.Lookup(reg_name)).To(BeEmpty())
 					})

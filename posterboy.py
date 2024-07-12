@@ -3,6 +3,7 @@
 
 import json
 import requests
+import time
 
 id = ''
 
@@ -13,6 +14,9 @@ if res.ok:
     print(json.dumps(j))
     id = j['id']
 
+# print('Sleeping')
+# time.sleep(5.0)
+
 
 req2 = {'name': 'flardman'}
 res2 = requests.post('http://localhost:8080/lookup', json=req2)
@@ -22,7 +26,8 @@ if res2.ok:
     print(json.dumps(j))
 
 
-req3 = {'id': id}
-res3 = requests.post('http://localhost:8080/deregister', json=req3)
-if res3.ok:
-    print(json.dumps(res3.json()))
+
+# req3 = {'id': id}
+# res3 = requests.post('http://localhost:8080/deregister', json=req3)
+# if res3.ok:
+#     print(json.dumps(res3.json()))

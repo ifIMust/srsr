@@ -2,7 +2,7 @@ package main
 
 import (
 	"net/http"
-	
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/ifIMust/srsr/registry"
@@ -28,11 +28,11 @@ type lookup_response struct {
 }
 
 type deregister_request struct {
-	ID      string `json:"id"`
+	ID string `json:"id"`
 }
 
 type deregister_response struct {
-	Success bool   `json:"success"`
+	Success bool `json:"success"`
 }
 
 func register(c *gin.Context, sr registry.Registry) {
