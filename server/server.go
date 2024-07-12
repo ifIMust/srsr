@@ -18,23 +18,6 @@ type RegisterResponse struct {
 	Success bool   `json:"success"`
 }
 
-type lookup_request struct {
-	Name string `json:"name"`
-}
-
-type lookup_response struct {
-	Success bool   `json:"success"`
-	Address string `json:"address"`
-}
-
-type deregister_request struct {
-	ID string `json:"id"`
-}
-
-type deregister_response struct {
-	Success bool `json:"success"`
-}
-
 func register(c *gin.Context, sr registry.Registry) {
 	var request RegisterRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -51,30 +34,47 @@ func register(c *gin.Context, sr registry.Registry) {
 	c.JSON(http.StatusOK, r)
 }
 
+type DeregisterRequest struct {
+	ID string `json:"id"`
+}
+
+type DeregisterResponse struct {
+	Success bool `json:"success"`
+}
+
 func deregister(c *gin.Context, sr registry.Registry) {
-	var request deregister_request
+	var request DeregisterRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	reg_err := sr.Deregister(request.ID)
-	r := deregister_response{}
+	r := DeregisterResponse{}
 	if reg_err == nil {
 		r.Success = true
 	}
 	c.JSON(http.StatusOK, r)
 }
 
+type LookupRequest struct {
+	Name string `json:"name"`
+}
+
+type LookupResponse struct {
+	Success bool   `json:"success"`
+	Address string `json:"address"`
+}
+
 func lookup(c *gin.Context, sr registry.Registry) {
-	var request lookup_request
+	var request LookupRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	address := sr.Lookup(request.Name)
-	r := lookup_response{}
+	r := LookupResponse{}
 	if len(address) > 0 {
 		r.Success = true
 		r.Address = address
