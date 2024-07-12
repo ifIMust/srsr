@@ -100,6 +100,7 @@ func (s *service_registry) Deregister(id string) error {
 	defer s.mutex.Unlock()
 	idEntry, ok := s.store[id]
 	if ok {
+		idEntry.Cancel <- 1
 		delete(s.store, id)
 		delete(s.nameStore, idEntry.Name)
 		return nil
