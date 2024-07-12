@@ -27,6 +27,14 @@ type lookup_response struct {
 	Address string `json:"address"`
 }
 
+type deregister_request struct {
+	ID      string `json:"id"`
+}
+
+type deregister_response struct {
+	Success bool   `json:"success"`
+}
+
 func register(c *gin.Context, sr registry.Registry) {
 	var request register_request
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -40,6 +48,21 @@ func register(c *gin.Context, sr registry.Registry) {
 	}
 
 	r := register_response{ID: id, Success: true}
+	c.JSON(http.StatusOK, r)
+}
+
+func deregister(c *gin.Context, sr registry.Registry) {
+	var request deregister_request
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	reg_err := sr.Deregister(request.ID)
+	r := deregister_response{}
+	if reg_err == nil {
+		r.Success = true
+	}
 	c.JSON(http.StatusOK, r)
 }
 
@@ -66,10 +89,11 @@ func main() {
 	router.POST("/register", func(c *gin.Context) {
 		register(c, registry)
 	})
-
+	router.POST("/deregister", func(c *gin.Context) {
+		deregister(c, registry)
+	})
 	router.POST("/lookup", func(c *gin.Context) {
 		lookup(c, registry)
 	})
-
 	router.Run("localhost:8080")
 }
