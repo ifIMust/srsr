@@ -4,6 +4,8 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"time"
+
 	"github.com/ifIMust/srsr/registry"
 )
 
@@ -118,6 +120,35 @@ var _ = Describe("Registry", func() {
 			})
 			It("should return stored address", func() {
 				Expect(lookup_address).To(Equal(reg_address))
+			})
+		})
+	})
+
+	Describe("Timeouts and Heartbeats", func() {
+		var reg_name string
+		var reg_address string
+		var id string
+
+		BeforeEach(func() {
+			reg_name = "flardmaster"
+			reg_address = "127.721.217.555:4343"
+			reg.SetTimeout(2 * time.Millisecond)
+			id, _ = reg.Register(reg_name, reg_address)
+		})
+
+		Context("without heartbeats", func() {
+			It("gets deregistered", func() {
+				<-time.After(3 * time.Millisecond)
+				Expect(reg.Lookup(reg_name)).To(BeEmpty())
+			})
+		})
+		Context("with heartbeats", func() {
+			It("remains registered", func() {
+				for i := 0; i < 3; i++ {
+					<-time.After(1 * time.Millisecond)
+					reg.Heartbeat(id)
+				}
+				Expect(reg.Lookup(reg_name)).To(Equal(reg_address))
 			})
 		})
 	})
