@@ -139,13 +139,13 @@ var _ = Describe("Registry", func() {
 			BeforeEach(func() {
 				reg_name = "flardmaster"
 				reg_address = "127.721.217.555:4343"
-				reg.SetTimeout(2 * time.Millisecond)
+				reg.SetTimeout(3 * time.Millisecond)
 				id, _ = reg.Register(reg_name, reg_address)
 			})
 
 			Context("without heartbeats", func() {
 				It("gets deregistered", func() {
-					<-time.After(3 * time.Millisecond)
+					<-time.After(4 * time.Millisecond)
 					Expect(reg.Lookup(reg_name)).To(BeEmpty())
 				})
 			})
@@ -155,7 +155,7 @@ var _ = Describe("Registry", func() {
 				})
 				
 				It("remains registered", func() {
-					for i := 0; i < 3; i++ {
+					for i := 0; i < 4; i++ {
 						<-time.After(1 * time.Millisecond)
 						reg.Heartbeat(id)
 					}

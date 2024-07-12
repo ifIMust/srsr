@@ -5,21 +5,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/ifIMust/srsr/message"
 	"github.com/ifIMust/srsr/registry"
 )
 
-type RegisterRequest struct {
-	Name    string `json:"name"`
-	Address string `json:"address"`
-}
-
-type RegisterResponse struct {
-	ID      string `json:"id"`
-	Success bool   `json:"success"`
-}
-
 func register(c *gin.Context, sr registry.Registry) {
-	var request RegisterRequest
+	var request message.RegisterRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -30,51 +21,34 @@ func register(c *gin.Context, sr registry.Registry) {
 		c.AbortWithError(http.StatusBadRequest, reg_err)
 	}
 
-	r := RegisterResponse{ID: id, Success: true}
+	r := message.RegisterResponse{ID: id, Success: true}
 	c.JSON(http.StatusOK, r)
 }
 
-type DeregisterRequest struct {
-	ID string `json:"id"`
-}
-
-type DeregisterResponse struct {
-	Success bool `json:"success"`
-}
-
 func deregister(c *gin.Context, sr registry.Registry) {
-	var request DeregisterRequest
+	var request message.DeregisterRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	reg_err := sr.Deregister(request.ID)
-	r := DeregisterResponse{}
+	r := message.DeregisterResponse{}
 	if reg_err == nil {
 		r.Success = true
 	}
 	c.JSON(http.StatusOK, r)
 }
 
-type LookupRequest struct {
-	Name string `json:"name"`
-}
-
-type LookupResponse struct {
-	Success bool   `json:"success"`
-	Address string `json:"address"`
-}
-
 func lookup(c *gin.Context, sr registry.Registry) {
-	var request LookupRequest
+	var request message.LookupRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	address := sr.Lookup(request.Name)
-	r := LookupResponse{}
+	r := message.LookupResponse{}
 	if len(address) > 0 {
 		r.Success = true
 		r.Address = address
@@ -82,22 +56,14 @@ func lookup(c *gin.Context, sr registry.Registry) {
 	c.JSON(http.StatusOK, r)
 }
 
-type HeartbeatRequest struct {
-	ID string `json:"id"`
-}
-
-type HeartbeatResponse struct {
-	Success bool `json:"success"`
-}
-
 func heartbeat(c *gin.Context, sr registry.Registry) {
-	var request HeartbeatRequest
+	var request message.HeartbeatRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	print("heartbeat with ID ", request.ID)
-	r := HeartbeatResponse{Success: sr.Heartbeat(request.ID)}
+	r := message.HeartbeatResponse{Success: sr.Heartbeat(request.ID)}
 	c.JSON(http.StatusOK, r)
 }
 
