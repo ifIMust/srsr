@@ -62,7 +62,6 @@ func heartbeat(c *gin.Context, sr registry.Registry) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	print("heartbeat with ID ", request.ID)
 	r := message.HeartbeatResponse{Success: sr.Heartbeat(request.ID)}
 	c.JSON(http.StatusOK, r)
 }
