@@ -22,8 +22,26 @@ type service_entry struct {
 	ID      string
 	Name    string
 	Address string
+
+	// Cancel is signalled when deregistering, so the timer and goroutine can be deallocated.
 	Cancel  chan int
+
+	// Reset is signalled when a heartbeat is received, to reset the timer.
 	Reset   chan int
+}
+
+func NewServiceEntry(name string, address string) *service_entry {
+	id := uuid.NewString()
+	entry := service_entry{ID: id,
+		Name:    name,
+		Address: address,
+
+		// Cancel has a buffer so that it can be signalled from Deregister
+		// without blocking, when Deregister is called due to timeout.
+		Cancel:  make(chan int, 1),
+		Reset:   make(chan int),
+	}
+	return &entry
 }
 
 type service_registry struct {
@@ -44,23 +62,16 @@ func NewServiceRegistry() *service_registry {
 }
 
 func (s *service_registry) Register(name string, address string) (string, error) {
-	id := uuid.NewString()
-	entry := service_entry{ID: id,
-		Name:    name,
-		Address: address,
-		Cancel:  make(chan int),
-		Reset:   make(chan int),
-	}
-
+	entry := NewServiceEntry(name, address)
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	s.store[id] = &entry
+	s.store[entry.ID] = entry
 	_, ok := s.nameStore[name]
 	if !ok {
 		s.nameStore[name] = make([]*service_entry, 0, 1)
 	}
-	s.nameStore[name] = append(s.nameStore[name], &entry)
+	s.nameStore[name] = append(s.nameStore[name], entry)
 
 	// Goroutine to handle automatic deregistration, in the absence of heartbeats
 	go func() {
@@ -70,7 +81,8 @@ func (s *service_registry) Register(name string, address string) (string, error)
 		for keepGoing {
 			select {
 			case <-timer.C:
-				s.Deregister(id)
+				s.Deregister(entry.ID)
+				keepGoing = false
 
 			case <-entry.Reset:
 				timer.Reset(s.serviceTimeout)
@@ -82,7 +94,7 @@ func (s *service_registry) Register(name string, address string) (string, error)
 		}
 	}()
 
-	return id, nil
+	return entry.ID, nil
 }
 
 func (s *service_registry) Lookup(name string) string {
