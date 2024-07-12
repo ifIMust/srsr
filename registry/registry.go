@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"errors"
 	"math/rand"
 	"sync"
 	
@@ -9,6 +10,7 @@ import (
 
 type Registry interface {
 	Register(name string, address string) (string, error)
+	Deregister(id string) error
 	Lookup(name string) string
 }
 
@@ -20,14 +22,14 @@ type service_entry struct {
 
 type service_registry struct {
 	mutex     sync.Mutex
-	Store     map[string]*service_entry
+	store     map[string]*service_entry
 	nameStore map[string][]*service_entry
 }
 
 func NewServiceRegistry() *service_registry {
 	sr := service_registry{}
 	// map ID to entry
-	sr.Store = make(map[string]*service_entry)
+	sr.store = make(map[string]*service_entry)
 	// map name to entries
 	sr.nameStore = make(map[string][]*service_entry)
 	return &sr
@@ -42,7 +44,7 @@ func (s *service_registry) Register(name string, address string) (string, error)
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	s.Store[id] = &entry
+	s.store[id] = &entry
 	_, ok := s.nameStore[name]
 	if !ok {
 		s.nameStore[name] = make([]*service_entry, 0, 1)
@@ -59,4 +61,16 @@ func (s *service_registry) Lookup(name string) string {
 		return entries[rand.Intn(len(entries))].Address
 	}
 	return ""
+}
+
+func (s *service_registry) Deregister(id string) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	idEntry, ok := s.store[id]
+	if ok {
+		delete(s.store, id)
+		delete(s.nameStore, idEntry.Name)
+		return nil
+	}
+	return errors.New("Deregister - no match for ID")
 }
