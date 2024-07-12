@@ -14,7 +14,7 @@ type Registry interface {
 	Register(name string, address string) (string, error)
 	Deregister(id string) error
 	Lookup(name string) string
-	Heartbeat(id string)
+	Heartbeat(id string) bool
 	SetTimeout(duration time.Duration)
 }
 
@@ -120,13 +120,15 @@ func (s *service_registry) Deregister(id string) error {
 	return errors.New("Deregister - no match for ID")
 }
 
-func (s *service_registry) Heartbeat(id string) {
+func (s *service_registry) Heartbeat(id string) bool {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	entry, ok := s.store[id]
 	if ok {
 		entry.Reset <- 1
+		return true
 	}
+	return false
 }
 
 func (s *service_registry) SetTimeout(duration time.Duration) {

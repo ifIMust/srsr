@@ -82,6 +82,25 @@ func lookup(c *gin.Context, sr registry.Registry) {
 	c.JSON(http.StatusOK, r)
 }
 
+type HeartbeatRequest struct {
+	ID string `json:"id"`
+}
+
+type HeartbeatResponse struct {
+	Success bool `json:"success"`
+}
+
+func heartbeat(c *gin.Context, sr registry.Registry) {
+	var request HeartbeatRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	print("heartbeat with ID ", request.ID)
+	r := HeartbeatResponse{Success: sr.Heartbeat(request.ID)}
+	c.JSON(http.StatusOK, r)
+}
+
 func SetupRouter(registry registry.Registry) *gin.Engine {
 	router := gin.Default()
 	router.POST("/register", func(c *gin.Context) {
@@ -92,6 +111,9 @@ func SetupRouter(registry registry.Registry) *gin.Engine {
 	})
 	router.POST("/lookup", func(c *gin.Context) {
 		lookup(c, registry)
+	})
+	router.POST("/heartbeat", func(c *gin.Context) {
+		heartbeat(c, registry)
 	})
 	return router
 }

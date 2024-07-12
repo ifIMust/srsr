@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
-	
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/ifIMust/srsr/registry"
@@ -18,7 +18,7 @@ import (
 
 var _ = Describe("Server", func() {
 	var router *gin.Engine
-	
+
 	BeforeEach(func() {
 		registry := registry.NewServiceRegistry()
 		router = server.SetupRouter(registry)
@@ -29,23 +29,84 @@ var _ = Describe("Server", func() {
 		BeforeEach(func() {
 			responseRecorder = httptest.NewRecorder()
 			request := server.RegisterRequest{
-				Name: "dungen",
+				Name:    "dungen",
 				Address: "localhost:5000",
 			}
 			reqJSON, _ := json.Marshal(request)
 			reqHTTP, _ := http.NewRequest("POST", "/register", strings.NewReader(string(reqJSON)))
 			router.ServeHTTP(responseRecorder, reqHTTP)
 		})
-		
+
 		It("returns OK", func() {
 			Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 		})
 		It("responds with the expected struct and ID", func() {
 			r := server.RegisterResponse{}
 			body, _ := io.ReadAll(responseRecorder.Body)
-			err := json.Unmarshal(body, &r)
-			Expect(err).To(BeNil())
+			json.Unmarshal(body, &r)
 			Ω(len(r.ID)).Should(BeNumerically(">", 8))
 		})
+	})
+
+	Context("Heartbeat", func() {
+		var responseRecorder *httptest.ResponseRecorder
+		var reqHTTP *http.Request
+
+		Context("without matching service ID", func() {
+			BeforeEach(func() {
+				responseRecorder = httptest.NewRecorder()
+				request := server.HeartbeatRequest{
+					ID: "2145",
+				}
+				reqJSON, _ := json.Marshal(request)
+				reqHTTP, _ = http.NewRequest("POST", "/heartbeat", strings.NewReader(string(reqJSON)))
+				router.ServeHTTP(responseRecorder, reqHTTP)
+			})
+
+			It("returns OK", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+			})
+			It("was unsuccessful", func() {
+				r := server.HeartbeatResponse{}
+				body, _ := io.ReadAll(responseRecorder.Body)
+				json.Unmarshal(body, &r)
+				Expect(r.Success).To(BeFalse())
+			})
+		})
+		Context("with matching service ID", func() {
+			BeforeEach(func() {
+				responseRecorder = httptest.NewRecorder()
+				regRequest := server.RegisterRequest{
+					Name:    "dungen",
+					Address: "localhost:5000",
+				}
+				reqJSON, _ := json.Marshal(regRequest)
+				registerHTTP, _ := http.NewRequest("POST", "/register", strings.NewReader(string(reqJSON)))
+				router.ServeHTTP(responseRecorder, registerHTTP)
+
+				regResp := server.RegisterResponse{}
+				body, _ := io.ReadAll(responseRecorder.Body)
+				json.Unmarshal(body, &regResp)
+
+				responseRecorder = httptest.NewRecorder()
+				request := server.HeartbeatRequest{
+					ID: regResp.ID,
+				}
+				reqJSON, _ = json.Marshal(request)
+				reqHTTP, _ = http.NewRequest("POST", "/heartbeat", strings.NewReader(string(reqJSON)))
+				router.ServeHTTP(responseRecorder, reqHTTP)
+			})
+			It("returns OK", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+			})
+			It("was successful", func() {
+				r := server.HeartbeatResponse{}
+				body, _ := io.ReadAll(responseRecorder.Body)
+				json.Unmarshal(body, &r)
+				Expect(r.Success).To(BeTrue())
+			})
+
+		})
+
 	})
 })

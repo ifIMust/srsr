@@ -129,26 +129,38 @@ var _ = Describe("Registry", func() {
 		var reg_address string
 		var id string
 
-		BeforeEach(func() {
-			reg_name = "flardmaster"
-			reg_address = "127.721.217.555:4343"
-			reg.SetTimeout(2 * time.Millisecond)
-			id, _ = reg.Register(reg_name, reg_address)
-		})
-
-		Context("without heartbeats", func() {
-			It("gets deregistered", func() {
-				<-time.After(3 * time.Millisecond)
-				Expect(reg.Lookup(reg_name)).To(BeEmpty())
+		Context("not registered", func() {
+			It("returns unsuccessful", func() {
+				Expect(reg.Heartbeat("is this valid?")).To(BeFalse())
 			})
 		})
-		Context("with heartbeats", func() {
-			It("remains registered", func() {
-				for i := 0; i < 3; i++ {
-					<-time.After(1 * time.Millisecond)
-					reg.Heartbeat(id)
-				}
-				Expect(reg.Lookup(reg_name)).To(Equal(reg_address))
+		
+		Context("after registering", func() {
+			BeforeEach(func() {
+				reg_name = "flardmaster"
+				reg_address = "127.721.217.555:4343"
+				reg.SetTimeout(2 * time.Millisecond)
+				id, _ = reg.Register(reg_name, reg_address)
+			})
+
+			Context("without heartbeats", func() {
+				It("gets deregistered", func() {
+					<-time.After(3 * time.Millisecond)
+					Expect(reg.Lookup(reg_name)).To(BeEmpty())
+				})
+			})
+			Context("with heartbeats", func() {
+				It("returns successful", func() {
+					Expect(reg.Heartbeat(id)).To(BeTrue())
+				})
+				
+				It("remains registered", func() {
+					for i := 0; i < 3; i++ {
+						<-time.After(1 * time.Millisecond)
+						reg.Heartbeat(id)
+					}
+					Expect(reg.Lookup(reg_name)).To(Equal(reg_address))
+				})
 			})
 		})
 	})
