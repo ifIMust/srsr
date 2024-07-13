@@ -8,6 +8,29 @@ It's very trusting; it does little to no validation to prevent abuse.
 
 By default, clients are expected to send a heartbeat every 30 seconds, or they will be deregistered.
 
+## Usage
+### Server
+For default port and timeout configuration:
+`go run main.go`
+
+To customize:
+`go run main.go [-p PORT] [-t TIMEOUT_SECONDS]`
+
+
+### Client
+A Go client is provided in the client package. 
+`go get github.com/ifIMust/srsr/client`
+```
+import "github.com/ifIMust/srsr/client"
+// ...
+var c client.ServiceRegistry = client.NewServiceRegistry(server_address, my_name, my_address)
+c.Register()
+// ...
+c.Deregister()
+```
+
+A Python client is also provided in client/srsrpy.
+
 ## Endpoints
 All actions are performed as JSON Post requests.
 
@@ -44,7 +67,7 @@ Response examples:
 ```
 
 ### /heartbeat
-Coming soon.
+Inform the service registry that the client is still up, to avoid automatic deregistration.
 Example request:
 ```
 {"id": "1ccda9cb-0432-4306-965d-6e0fbad571bc"}
