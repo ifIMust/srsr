@@ -73,3 +73,8 @@ Example request:
 {"id": "1ccda9cb-0432-4306-965d-6e0fbad571bc"}
 ```
 (Response body unused)
+
+
+## Further plans
+- Move the Python client to a separate repository.
+- Validate addresses submitted to `/register`
