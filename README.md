@@ -9,6 +9,8 @@ It's very trusting; it does little to no validation to prevent abuse.
 By default, clients are expected to send a heartbeat every 30 seconds, or they will be deregistered.
 
 ## Usage
+There is no binary package at this time, so the Go compiler is required.
+
 ### Server
 For default port and timeout configuration:
 `go run main.go`
@@ -77,4 +79,6 @@ Example request:
 
 ## Further plans
 - Move the Python client to a separate repository.
+- Deploy a package containing a server binary.
+- Write API tests to replace manual/scripted testing
 - Validate addresses submitted to `/register`
