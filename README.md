@@ -1,12 +1,16 @@
 # srsr
-A Really Simple Service Registry
+Really Simple Service Registry
 
 ## Description
-srsr is a service registry written in Go. The primary goals are easy setup, and easy client implementation.
-srsr uses [Gin](https://gin-gonic.com/) to offer a fast HTTP-based API.
+srsr is a service registry written in Go. Its purpose is to allow microservices to find each other.
+The primary goals are easy setup, and easy client implementation.
+
+srsr uses [Gin](https://gin-gonic.com/) to offer an HTTP-based API.
 It's very trusting; it does little to no validation to prevent abuse.
 
+Clients are provided for Go and Python projects.
 By default, clients are expected to send a heartbeat every 30 seconds, or they will be deregistered.
+The provided clients are configured to send a heartbeat every 20 seconds.
 
 ## Usage
 There is no binary package at this time, so the Go compiler is required.
@@ -18,9 +22,10 @@ For default port and timeout configuration:
 To customize:
 `go run main.go [-p PORT] [-t TIMEOUT_SECONDS]`
 
-
 ### Client
-A Go client is provided in the client package. 
+A Python client is provided [here](https://github.com/ifIMust/srsrpy).
+
+A Go client is provided in the `client` package.
 `go get github.com/ifIMust/srsr/client`
 ```
 import "github.com/ifIMust/srsr/client"
@@ -30,8 +35,6 @@ c.Register()
 // ...
 c.Deregister()
 ```
-
-A Python client is also provided in client/srsrpy.
 
 ## Endpoints
 All actions are performed as JSON Post requests.
@@ -78,7 +81,6 @@ Example request:
 
 
 ## Further plans
-- Move the Python client to a separate repository.
 - Deploy a package containing a server binary.
 - Write API tests to replace manual/scripted testing
 - Validate addresses submitted to `/register`
