@@ -26,32 +26,118 @@ var _ = Describe("Server", func() {
 	})
 	Context("Register", func() {
 		var responseRecorder *httptest.ResponseRecorder
-
 		BeforeEach(func() {
 			responseRecorder = httptest.NewRecorder()
-			request := message.RegisterRequest{
-				Name:    "dungen",
-				Address: "localhost:5000",
-			}
-			reqJSON, _ := json.Marshal(request)
-			reqHTTP, _ := http.NewRequest("POST", "/register", strings.NewReader(string(reqJSON)))
-			router.ServeHTTP(responseRecorder, reqHTTP)
 		})
-
-		It("returns OK", func() {
-			Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+		When("the request is valid", func() {
+			BeforeEach(func() {
+				request := message.RegisterRequest{
+					Name:    "dungen",
+					Address: "localhost:5000",
+				}
+				reqJSON, _ := json.Marshal(request)
+				reqHTTP, _ := http.NewRequest("POST", "/register", strings.NewReader(string(reqJSON)))
+				router.ServeHTTP(responseRecorder, reqHTTP)
+			})
+			It("returns OK", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+			})
+			It("responds with the expected struct and ID", func() {
+				r := message.RegisterResponse{}
+				body, _ := io.ReadAll(responseRecorder.Body)
+				json.Unmarshal(body, &r)
+				Ω(len(r.ID)).Should(BeNumerically(">", 8))
+			})
 		})
-		It("responds with the expected struct and ID", func() {
-			r := message.RegisterResponse{}
-			body, _ := io.ReadAll(responseRecorder.Body)
-			json.Unmarshal(body, &r)
-			Ω(len(r.ID)).Should(BeNumerically(">", 8))
+		When("the request is malformed", func() {
+			BeforeEach(func() {
+				reqJSON := "{'Desc: 'dungen', 'Adress': 'localhost:5000'}"
+				reqHTTP, _ := http.NewRequest("POST", "/register", strings.NewReader(string(reqJSON)))
+				router.ServeHTTP(responseRecorder, reqHTTP)
+			})
+			It("responds Bad Request", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+			})
 		})
 	})
+	Context("Deregister", func() {
+		var responseRecorder *httptest.ResponseRecorder
+		BeforeEach(func() {
+			responseRecorder = httptest.NewRecorder()
+		})
+		When("the request is malformed", func() {
+			BeforeEach(func() {
+				reqJSON := "{'ident': 'hello'}"
+				reqHTTP, _ := http.NewRequest("POST", "/deregister", strings.NewReader(string(reqJSON)))
+				router.ServeHTTP(responseRecorder, reqHTTP)
+			})
+			It("responds Bad Request", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+			})
+		})
+		When("the request is valid, but no ID matches", func() {
+			BeforeEach(func() {
+				request := message.DeregisterRequest{
+					ID: "2145",
+				}
+				reqJSON, _ := json.Marshal(request)
+				reqHTTP, _ := http.NewRequest("POST", "/deregister", strings.NewReader(string(reqJSON)))
+				router.ServeHTTP(responseRecorder, reqHTTP)
+			})
+			It("returns OK", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+			})
 
+			It("responds with Success False", func() {
+				deregResp := message.DeregisterResponse{}
+				body, _ := io.ReadAll(responseRecorder.Body)
+				json.Unmarshal(body, &deregResp)
+				Expect(deregResp.Success).To(BeFalse())
+			})
+		})
+		When("the request is valid, and an ID matches", func() {
+			BeforeEach(func() {
+				responseRecorder = httptest.NewRecorder()
+				regRequest := message.RegisterRequest{
+					Name:    "dungen",
+					Address: "localhost:5000",
+				}
+				reqJSON, _ := json.Marshal(regRequest)
+				registerHTTP, _ := http.NewRequest("POST", "/register", strings.NewReader(string(reqJSON)))
+				router.ServeHTTP(responseRecorder, registerHTTP)
+
+				regResp := message.RegisterResponse{}
+				body, _ := io.ReadAll(responseRecorder.Body)
+				json.Unmarshal(body, &regResp)
+
+				responseRecorder = httptest.NewRecorder()
+				request := message.DeregisterRequest{
+					ID: regResp.ID,
+				}
+				reqJSON, _ = json.Marshal(request)
+				reqHTTP, _ := http.NewRequest("POST", "/deregister", strings.NewReader(string(reqJSON)))
+				router.ServeHTTP(responseRecorder, reqHTTP)
+			})
+			It("returns OK", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+			})
+		})
+	})
 	Context("Heartbeat", func() {
 		var responseRecorder *httptest.ResponseRecorder
 		var reqHTTP *http.Request
+
+		Context("with malformed request", func() {
+			BeforeEach(func() {
+				responseRecorder = httptest.NewRecorder()
+				reqJSON := "{'uuid': '2145'}"
+				reqHTTP, _ = http.NewRequest("POST", "/heartbeat", strings.NewReader(string(reqJSON)))
+				router.ServeHTTP(responseRecorder, reqHTTP)
+			})
+			It("responds Bad Request", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+			})
+		})
 
 		Context("without matching service ID", func() {
 			BeforeEach(func() {
