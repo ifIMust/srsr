@@ -67,6 +67,8 @@ func heartbeat(c *gin.Context, sr registry.Registry) {
 }
 
 func SetupRouter(registry registry.Registry) *gin.Engine {
+	gin.SetMode(gin.ReleaseMode)
+
 	router := gin.Default()
 	router.POST("/register", func(c *gin.Context) {
 		register(c, registry)

@@ -15,15 +15,11 @@ The provided clients are configured to send a heartbeat every 20 seconds.
 ## Usage
 
 ### Server
-For default port (4214) and timeout (30s) configuration, just run the precompiled binary, e.g. (Linux):
+Precompiled binaries are available for most systems.
 ```
 chmod +x ./srsr-linux-amd64
-./srsr-linux-amd64
+./srsr-linux-amd64 [-p PORT] [-t TIMEOUT_SECONDS]
 ```
-
-Release mode with custom port/timeout:
-`GIN_MODE=release ./srsr-linux-amd64 [-p PORT] [-t TIMEOUT_SECONDS]`
-
 
 ### Client
 A Python client is provided [here](https://github.com/ifIMust/srsrpy).
