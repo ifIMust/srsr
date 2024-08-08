@@ -13,14 +13,17 @@ By default, clients are expected to send a heartbeat every 30 seconds, or they w
 The provided clients are configured to send a heartbeat every 20 seconds.
 
 ## Usage
-There is no binary package at this time, so the Go compiler is required.
 
 ### Server
-For default port and timeout configuration:
-`go run main.go`
+For default port (4214) and timeout (30s) configuration, just run the precompiled binary, e.g. (Linux):
+```
+chmod +x ./srsr-linux-amd64
+./srsr-linux-amd64
+```
 
-To customize:
-`go run main.go [-p PORT] [-t TIMEOUT_SECONDS]`
+Release mode with custom port/timeout:
+`GIN_MODE=release ./srsr-linux-amd64 [-p PORT] [-t TIMEOUT_SECONDS]`
+
 
 ### Client
 A Python client is provided [here](https://github.com/ifIMust/srsrpy).
@@ -36,7 +39,7 @@ c.Register()
 c.Deregister()
 ```
 
-## Endpoints
+## API Endpoints
 All actions are performed as JSON Post requests.
 
 ### /register
@@ -81,6 +84,6 @@ Example request:
 
 
 ## Further plans
-- Deploy a package containing a server binary.
-- Write API tests to replace manual/scripted testing
+- Have Gin run in release mode by default.
+- Write API tests to replace manual/scripted testing.
 - Validate addresses submitted to `/register`
