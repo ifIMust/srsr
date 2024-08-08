@@ -1,0 +1,23 @@
+# Version for this file.
+version: 1
+
+env:
+  - GO111MODULE=on
+  - CGO_ENABLED=0
+
+# The OS to compile for. `GOOS` env variable will be set to this value.
+goos: windows
+
+# The architecture to compile for. `GOARCH` env variable will be set to this value.
+goarch: arm64
+
+# Binary output name.
+# {{ .Os }} will be replaced by goos field in the config file.
+# {{ .Arch }} will be replaced by goarch field in the config file.
+binary: srsr-{{ .Os }}-{{ .Arch }}
+
+ldflags:
+  - "-X main.Version={{ .Env.VERSION }}"
+  - "-X main.Commit={{ .Env.COMMIT }}"
+  - "-X main.CommitDate={{ .Env.COMMIT_DATE }}"
+  - "-X main.TreeState={{ .Env.TREE_STATE }}"
