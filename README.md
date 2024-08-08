@@ -80,6 +80,5 @@ Example request:
 
 
 ## Further plans
-- Have Gin run in release mode by default.
-- Write API tests to replace manual/scripted testing.
-- Validate addresses submitted to `/register`
+- Improve API tests for 100% coverage.
+- Test suite for Go client.

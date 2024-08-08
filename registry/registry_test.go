@@ -20,23 +20,41 @@ var _ = Describe("Registry", func() {
 		var reg_name string
 		var reg_address string
 
-		BeforeEach(func() {
-			reg_name = "flardmaster"
-			reg_address = "127.721.217.555:4343"
-		})
-
-		Context("when empty", func() {
-			var id string
-			var err error
-
+		When("address is valid", func() {
 			BeforeEach(func() {
-				id, err = reg.Register(reg_name, reg_address)
+				reg_name = "flardmaster"
+				reg_address = "http://127.721.217.555:4343"
 			})
-			It("should return no error", func() {
-				Expect(err).To(BeNil())
+
+			Context("when empty", func() {
+				var id string
+				var err error
+
+				BeforeEach(func() {
+					id, err = reg.Register(reg_name, reg_address)
+				})
+				It("should return no error", func() {
+					Expect(err).To(BeNil())
+				})
+				It("should return non-empty ID", func() {
+					Expect(id).NotTo(BeEmpty())
+				})
 			})
-			It("should return non-empty ID", func() {
-				Expect(id).NotTo(BeEmpty())
+		})
+		When("address is not absolute URI", func() {
+			BeforeEach(func() {
+				reg_name = "flardmaster"
+				reg_address = "127.721.217.555:4343"
+			})
+			Context("when registry is empty", func() {
+				var err error
+
+				BeforeEach(func() {
+					_, err = reg.Register(reg_name, reg_address)
+				})
+				It("should return an error", func() {
+					Expect(err).NotTo(BeNil())
+				})
 			})
 		})
 	})
@@ -50,7 +68,7 @@ var _ = Describe("Registry", func() {
 		BeforeEach(func() {
 			id = "234343242342"
 			reg_name = "callisto"
-			reg_address = "234.234.222.111:3232"
+			reg_address = "http://234.234.222.111:3232"
 		})
 		Context("when empty", func() {
 			BeforeEach(func() {
@@ -101,7 +119,7 @@ var _ = Describe("Registry", func() {
 
 		BeforeEach(func() {
 			lookup_name = "flardmaster"
-			reg_address = "128.128.128.128:128"
+			reg_address = "http://128.128.128.128:128"
 		})
 
 		Context("when empty", func() {
@@ -134,11 +152,11 @@ var _ = Describe("Registry", func() {
 				Expect(reg.Heartbeat("is this valid?")).To(BeFalse())
 			})
 		})
-		
+
 		Context("after registering", func() {
 			BeforeEach(func() {
 				reg_name = "flardmaster"
-				reg_address = "127.721.217.555:4343"
+				reg_address = "http://127.721.217.555:4343"
 				reg.SetTimeout(3 * time.Millisecond)
 				id, _ = reg.Register(reg_name, reg_address)
 			})
@@ -153,7 +171,7 @@ var _ = Describe("Registry", func() {
 				It("returns successful", func() {
 					Expect(reg.Heartbeat(id)).To(BeTrue())
 				})
-				
+
 				It("remains registered", func() {
 					for i := 0; i < 4; i++ {
 						<-time.After(1 * time.Millisecond)

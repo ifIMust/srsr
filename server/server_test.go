@@ -49,6 +49,20 @@ var _ = Describe("Server", func() {
 				Ω(len(r.ID)).Should(BeNumerically(">", 8))
 			})
 		})
+		When("the request uses non-absolute URI", func() {
+			BeforeEach(func() {
+				request := message.RegisterRequest{
+					Name:    "dungen",
+					Address: "localhost",
+				}
+				reqJSON, _ := json.Marshal(request)
+				reqHTTP, _ := http.NewRequest("POST", "/register", strings.NewReader(string(reqJSON)))
+				router.ServeHTTP(responseRecorder, reqHTTP)
+			})
+			It("returns Bad", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+			})
+		})
 		When("the request is malformed", func() {
 			BeforeEach(func() {
 				reqJSON := "{'Desc: 'dungen', 'Adress': 'localhost:5000'}"

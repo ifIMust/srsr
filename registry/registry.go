@@ -2,10 +2,12 @@ package registry
 
 import (
 	"errors"
-	"github.com/google/uuid"
 	"math/rand"
+	"net/url"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const defaultTimeout = 30 * time.Second
@@ -24,10 +26,10 @@ type service_entry struct {
 	Address string
 
 	// Cancel is signalled when deregistering, so the timer and goroutine can be deallocated.
-	Cancel  chan int
+	Cancel chan int
 
 	// Reset is signalled when a heartbeat is received, to reset the timer.
-	Reset   chan int
+	Reset chan int
 }
 
 func NewServiceEntry(name string, address string) *service_entry {
@@ -38,8 +40,8 @@ func NewServiceEntry(name string, address string) *service_entry {
 
 		// Cancel has a buffer so that it can be signalled from Deregister
 		// without blocking, when Deregister is called due to timeout.
-		Cancel:  make(chan int, 1),
-		Reset:   make(chan int),
+		Cancel: make(chan int, 1),
+		Reset:  make(chan int),
 	}
 	return &entry
 }
@@ -62,7 +64,14 @@ func NewServiceRegistry() *service_registry {
 }
 
 func (s *service_registry) Register(name string, address string) (string, error) {
+	// Do nothing if the address isn't a valid absolute URI
+	_, err := url.ParseRequestURI(address)
+	if err != nil {
+		return "", err
+	}
+
 	entry := NewServiceEntry(name, address)
+
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
