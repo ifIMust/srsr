@@ -1,7 +1,7 @@
 package message
 
 type RegisterRequest struct {
-	Name    string `json:"name"`
+	Name    string `json:"name" binding:"required"`
 	Address string `json:"address"`
 }
 
@@ -11,7 +11,7 @@ type RegisterResponse struct {
 }
 
 type DeregisterRequest struct {
-	ID string `json:"id"`
+	ID string `json:"id" binding:"required"`
 }
 
 type DeregisterResponse struct {
@@ -19,7 +19,7 @@ type DeregisterResponse struct {
 }
 
 type LookupRequest struct {
-	Name string `json:"name"`
+	Name string `json:"name" binding:"required"`
 }
 
 type LookupResponse struct {
@@ -28,7 +28,7 @@ type LookupResponse struct {
 }
 
 type HeartbeatRequest struct {
-	ID string `json:"id"`
+	ID string `json:"id" binding:"required"`
 }
 
 type HeartbeatResponse struct {

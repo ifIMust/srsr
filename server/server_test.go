@@ -93,6 +93,16 @@ var _ = Describe("Server", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
 			})
 		})
+		When("the request lacks required name field", func() {
+			BeforeEach(func() {
+				reqJSON := "{\"Address\": \"localhost:5000\"}"
+				reqHTTP, _ := http.NewRequest("POST", "/register", strings.NewReader(string(reqJSON)))
+				router.ServeHTTP(responseRecorder, reqHTTP)
+			})
+			It("responds Bad Request", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+			})
+		})
 	})
 	Context("Deregister", func() {
 		var responseRecorder *httptest.ResponseRecorder
@@ -101,7 +111,7 @@ var _ = Describe("Server", func() {
 		})
 		When("the request is malformed", func() {
 			BeforeEach(func() {
-				reqJSON := "{'ident': 'hello'}"
+				reqJSON := "{}"
 				reqHTTP, _ := http.NewRequest("POST", "/deregister", strings.NewReader(string(reqJSON)))
 				router.ServeHTTP(responseRecorder, reqHTTP)
 			})
@@ -164,7 +174,7 @@ var _ = Describe("Server", func() {
 		Context("with malformed request", func() {
 			BeforeEach(func() {
 				responseRecorder = httptest.NewRecorder()
-				reqJSON := "{'uuid': '2145'}"
+				reqJSON := "{}"
 				reqHTTP, _ = http.NewRequest("POST", "/heartbeat", strings.NewReader(string(reqJSON)))
 				router.ServeHTTP(responseRecorder, reqHTTP)
 			})
@@ -229,5 +239,61 @@ var _ = Describe("Server", func() {
 
 		})
 
+	})
+	Context("Lookup", func() {
+		var responseRecorder *httptest.ResponseRecorder
+		var reqHTTP *http.Request
+		var response message.LookupResponse
+
+		Context("with matching name", func() {
+			var address string
+
+			BeforeEach(func() {
+				responseRecorder = httptest.NewRecorder()
+				address = "localhost:5000"
+				regRequest := message.RegisterRequest{
+					Name:    "dungen",
+					Address: address,
+				}
+				reqJSON, _ := json.Marshal(regRequest)
+				registerHTTP, _ := http.NewRequest("POST", "/register", strings.NewReader(string(reqJSON)))
+				router.ServeHTTP(responseRecorder, registerHTTP)
+
+				regResp := message.RegisterResponse{}
+				body, _ := io.ReadAll(responseRecorder.Body)
+				json.Unmarshal(body, &regResp)
+
+				responseRecorder = httptest.NewRecorder()
+				request := message.LookupRequest{
+					Name: "dungen",
+				}
+				reqJSON, _ = json.Marshal(request)
+				reqHTTP, _ = http.NewRequest("POST", "/lookup", strings.NewReader(string(reqJSON)))
+				router.ServeHTTP(responseRecorder, reqHTTP)
+
+				body, _ = io.ReadAll(responseRecorder.Body)
+				json.Unmarshal(body, &response)
+			})
+			It("returns OK", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+			})
+			It("was successful", func() {
+				Expect(response.Success).To(BeTrue())
+			})
+			It("was successful", func() {
+				Expect(response.Address).To(Equal(address))
+			})
+		})
+		Context("with malformed request", func() {
+			BeforeEach(func() {
+				responseRecorder = httptest.NewRecorder()
+				reqJSON := "{\"nombre\": \"youthere\"}"
+				reqHTTP, _ = http.NewRequest("POST", "/lookup", strings.NewReader(string(reqJSON)))
+				router.ServeHTTP(responseRecorder, reqHTTP)
+			})
+			It("responds Bad Request", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusBadRequest))
+			})
+		})
 	})
 })
