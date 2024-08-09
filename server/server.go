@@ -9,6 +9,8 @@ import (
 	"github.com/ifIMust/srsr/registry"
 )
 
+const defaultScheme = "http://"
+
 func register(c *gin.Context, sr registry.Registry) {
 	var request message.RegisterRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -16,9 +18,15 @@ func register(c *gin.Context, sr registry.Registry) {
 		return
 	}
 
+	// This might be a wrong guess, since it will not include the client port
+	if request.Address == "" {
+		request.Address = defaultScheme + c.ClientIP()
+	}
+
 	id, reg_err := sr.Register(request.Name, request.Address)
 	if reg_err != nil {
 		c.AbortWithError(http.StatusBadRequest, reg_err)
+		return
 	}
 
 	r := message.RegisterResponse{ID: id, Success: true}

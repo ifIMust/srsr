@@ -49,6 +49,26 @@ var _ = Describe("Server", func() {
 				Ω(len(r.ID)).Should(BeNumerically(">", 8))
 			})
 		})
+		When("the request is valid with empty address", func() {
+			BeforeEach(func() {
+				request := message.RegisterRequest{
+					Name:    "dungen",
+					Address: "",
+				}
+				reqJSON, _ := json.Marshal(request)
+				reqHTTP, _ := http.NewRequest("POST", "/register", strings.NewReader(string(reqJSON)))
+				router.ServeHTTP(responseRecorder, reqHTTP)
+			})
+			It("returns OK", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+			})
+			It("responds with the expected struct and ID", func() {
+				r := message.RegisterResponse{}
+				body, _ := io.ReadAll(responseRecorder.Body)
+				json.Unmarshal(body, &r)
+				Ω(len(r.ID)).Should(BeNumerically(">", 8))
+			})
+		})
 		When("the request uses non-absolute URI", func() {
 			BeforeEach(func() {
 				request := message.RegisterRequest{
