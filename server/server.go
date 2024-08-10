@@ -18,9 +18,19 @@ func register(c *gin.Context, sr registry.Registry) {
 		return
 	}
 
-	// This might be a wrong guess, since it will not include the client port
 	if request.Address == "" {
-		request.Address = defaultScheme + c.ClientIP()
+		deducedIP := c.ClientIP()
+		if deducedIP != "" {
+			request.Address = defaultScheme + deducedIP
+		} else {
+			// No address provided, and failed to deduce one.
+			// Unit tests don't have this value set.
+			request.Address = defaultScheme + "127.0.0.1"
+		}
+	}
+
+	if request.Port != "" {
+		request.Address = request.Address + ":" + request.Port
 	}
 
 	id, reg_err := sr.Register(request.Name, request.Address)

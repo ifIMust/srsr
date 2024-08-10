@@ -80,5 +80,6 @@ Example request:
 
 
 ## Further plans
-- Improve API tests for 100% coverage.
-- Test suite for Go client.
+- Create test suite for Go client.
+  - Add supported feature to Go client to register with port only, leaving address blank
+-  Update this README: Heartbeat and Deregister do return a JSON object with a Success value.

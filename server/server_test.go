@@ -247,41 +247,79 @@ var _ = Describe("Server", func() {
 
 		Context("with matching name", func() {
 			var address string
+			Context("address without port", func() {
+				BeforeEach(func() {
+					responseRecorder = httptest.NewRecorder()
+					address = "localhost:5000"
+					regRequest := message.RegisterRequest{
+						Name:    "dungen",
+						Address: address,
+					}
+					reqJSON, _ := json.Marshal(regRequest)
+					registerHTTP, _ := http.NewRequest("POST", "/register", strings.NewReader(string(reqJSON)))
+					router.ServeHTTP(responseRecorder, registerHTTP)
 
-			BeforeEach(func() {
-				responseRecorder = httptest.NewRecorder()
-				address = "localhost:5000"
-				regRequest := message.RegisterRequest{
-					Name:    "dungen",
-					Address: address,
-				}
-				reqJSON, _ := json.Marshal(regRequest)
-				registerHTTP, _ := http.NewRequest("POST", "/register", strings.NewReader(string(reqJSON)))
-				router.ServeHTTP(responseRecorder, registerHTTP)
+					regResp := message.RegisterResponse{}
+					body, _ := io.ReadAll(responseRecorder.Body)
+					json.Unmarshal(body, &regResp)
 
-				regResp := message.RegisterResponse{}
-				body, _ := io.ReadAll(responseRecorder.Body)
-				json.Unmarshal(body, &regResp)
+					responseRecorder = httptest.NewRecorder()
+					request := message.LookupRequest{
+						Name: "dungen",
+					}
+					reqJSON, _ = json.Marshal(request)
+					reqHTTP, _ = http.NewRequest("POST", "/lookup", strings.NewReader(string(reqJSON)))
+					router.ServeHTTP(responseRecorder, reqHTTP)
 
-				responseRecorder = httptest.NewRecorder()
-				request := message.LookupRequest{
-					Name: "dungen",
-				}
-				reqJSON, _ = json.Marshal(request)
-				reqHTTP, _ = http.NewRequest("POST", "/lookup", strings.NewReader(string(reqJSON)))
-				router.ServeHTTP(responseRecorder, reqHTTP)
-
-				body, _ = io.ReadAll(responseRecorder.Body)
-				json.Unmarshal(body, &response)
+					body, _ = io.ReadAll(responseRecorder.Body)
+					json.Unmarshal(body, &response)
+				})
+				It("returns OK", func() {
+					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				})
+				It("was successful", func() {
+					Expect(response.Success).To(BeTrue())
+				})
+				It("was successful", func() {
+					Expect(response.Address).To(Equal(address))
+				})
 			})
-			It("returns OK", func() {
-				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-			})
-			It("was successful", func() {
-				Expect(response.Success).To(BeTrue())
-			})
-			It("was successful", func() {
-				Expect(response.Address).To(Equal(address))
+			Context("port without address", func() {
+				BeforeEach(func() {
+					responseRecorder = httptest.NewRecorder()
+					address = "http://127.0.0.1:4321"
+					regRequest := message.RegisterRequest{
+						Name: "dungen",
+						Port: "4321",
+					}
+					reqJSON, _ := json.Marshal(regRequest)
+					registerHTTP, _ := http.NewRequest("POST", "/register", strings.NewReader(string(reqJSON)))
+					router.ServeHTTP(responseRecorder, registerHTTP)
+
+					regResp := message.RegisterResponse{}
+					body, _ := io.ReadAll(responseRecorder.Body)
+					json.Unmarshal(body, &regResp)
+
+					responseRecorder = httptest.NewRecorder()
+					request := message.LookupRequest{
+						Name: "dungen",
+					}
+					reqJSON, _ = json.Marshal(request)
+					reqHTTP, _ = http.NewRequest("POST", "/lookup", strings.NewReader(string(reqJSON)))
+					router.ServeHTTP(responseRecorder, reqHTTP)
+
+					body, _ = io.ReadAll(responseRecorder.Body)
+					json.Unmarshal(body, &response)
+				})
+				It("returns OK", func() {
+					Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				})
+				It("was successful", func() {
+					Expect(response.Success).To(BeTrue())
+				})
+				It("was successful", func() {
+					Expect(response.Address).To(Equal(address))
+				})
 			})
 		})
 		Context("with malformed request", func() {
