@@ -6,7 +6,9 @@ srsr is a service registry written in Go. Its purpose is to allow microservices 
 The primary goals are easy setup, and easy client implementation.
 
 srsr uses [Gin](https://gin-gonic.com/) to offer an HTTP-based API.
-It's very trusting; it does little to no validation to prevent abuse.
+It's very trusting; it does minimal validation to prevent abuse.
+
+When multiple services are registered with the same service name, one is chosen at random on lookup.
 
 Clients are provided for Go and Python projects.
 By default, clients are expected to send a heartbeat every 30 seconds, or they will be deregistered.
@@ -49,13 +51,24 @@ Response:
 {"success": true, "id": "1ccda9cb-0432-4306-965d-6e0fbad571bc"}
 ```
 
+The client may specify a port in the address string. If the client service cannot easily determine their binding address, they may specify the port only. The server will attempt to deduce the address.
+```
+{"name": "flard_service", "port": "1234"}
+```
+
+If neither addresss, nor port are specified, the service is registered at `http://localhost`, which might not be correct.
+
+
 ### /deregister
 Deregister a service. The client should do this once at shutdown, using the ID stored from registration.
 Example request:
 ```
 {"id": "1ccda9cb-0432-4306-965d-6e0fbad571bc"}
 ```
-(Response body unused)
+Response:
+```
+{"success": "true"}
+```
 
 ### /lookup
 Retrieve an address for a service.
@@ -76,10 +89,11 @@ Example request:
 ```
 {"id": "1ccda9cb-0432-4306-965d-6e0fbad571bc"}
 ```
-(Response body unused)
-
+Response:
+```
+{"success": "true"}
+```
 
 ## Further plans
 - Create test suite for Go client.
   - Add supported feature to Go client to register with port only, leaving address blank
--  Update this README: Heartbeat and Deregister do return a JSON object with a Success value.
